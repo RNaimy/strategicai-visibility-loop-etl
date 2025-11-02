@@ -1,0 +1,106 @@
+# ETL configuration for StrategicAI Visibility Loop ETL
+
+inputs:
+  screaming_frog_csv: "data/screaming_frog_export.csv"
+  gsc_csv: "data/gsc_export.csv"
+  ga4_csv: "data/ga4_export.csv"
+
+schemas:
+  frog: 
+    - url
+    - status_code
+    - title
+    - meta_description
+    - click_depth
+    - inlinks
+    - word_count
+    - schema_types
+  gsc:
+    - url
+    - gsc_clicks_90d
+    - gsc_impressions_90d
+    - gsc_ctr_90d
+    - gsc_position_90d
+  ga4:
+    - url
+    - ga4_sessions_90d
+    - ga4_users_90d
+    - ga4_avg_engagement_time
+
+join_key: url
+
+output:
+  merged_csv: "merged/merged_visibility.csv"
+  upload_to_sheets: false
+
+  google_sheets:
+    service_account_json: "secrets/service_account.json"
+    spreadsheet_name: "AI Visibility Loop"
+    worksheet_name: "merged_latest"
+
+# --- Scoring and heuristics used by transforms/ and ETL ---
+scoring:
+  # Expected CTR baselines by average position bucket (fractions, not percents).
+  # Tune these to your industry. These defaults roughly align with practitioner benchmarks for web results.
+  expected_ctr_by_position:
+    "1.0-1.9": 0.014   # 1.4%
+    "2.0-2.9": 0.0125  # 1.25%
+    "3.0-3.9": 0.011   # 1.1%
+    "4.0-4.9": 0.0095  # 0.95%
+    "5.0-5.9": 0.008   # 0.8%
+    "6.0-10.0": 0.0065 # 0.65%
+    "10.1-20.0": 0.0055 # 0.55%
+    "20.1-50.0": 0.0045 # 0.45%
+  # Units for expected CTR values ('fraction' means 0.01 = 1%; 'percent' means 1 = 1%)
+  expected_ctr_units: fraction
+  # Optional uplift factor to raise expected CTRs (e.g., 0.20 = +20%)
+  expected_ctr_uplift: 0.50
+  # Optional CTR intent multipliers to refine expectations per URL intent.
+  # These are applied multiplicatively on top of the baseline above.
+  intent_multipliers:
+    navigational: 1.20
+    commercial: 1.10
+    informational: 1.00
+    comparison: 0.90
+  max_position_for_ctr_eval: 50.0
+  # Minimum click volume to include a row in CTR underperformance analysis.
+  min_clicks_for_ctr_eval: 5
+
+thresholds:
+  # Consider a URL underperforming if actual CTR is below (1 - underperf_margin) * expected
+  ctr_underperf_margin: 0.25     # 15% below expected CTR triggers underperformance (more sensitive for demos)
+  anomaly_z: 2.0                  # z-score threshold for anomaly detection
+  min_entity_confidence: 0.80     # used by transforms/entity_enrichment.py
+
+mappings:
+  # Map schema types to a canonical entity_type when ambiguous / multi-valued.
+  schema_to_entity:
+    Article: "Article"
+    BlogPosting: "Article"
+    NewsArticle: "Article"
+    Product: "Product"
+    Organization: "Organization"
+    LocalBusiness: "Organization"
+  # Simple URL-based intent hints. The first matching key applies.
+  url_intent_hints:
+    "/blog/": informational
+    "/learn/": informational
+    "/compare": comparison
+    "/vs-": comparison
+    "/product": commercial
+    "/pricing": commercial
+    "/features": commercial
+    "/about": navigational
+    "/contact": navigational
+
+governance:
+  # Where to write logs of ETL runs and prompt versions (if you wire an LLM step).
+  log_dir: "logs"
+  prompt_log_csv: "logs/prompt_log.csv"
+  # Append-only behavior is recommended for auditability.
+  append_only: true
+
+documentation:
+  # Keep paths to project docs so scripts can reference or generate links.
+  data_dictionary: "docs/data_dictionary.md"
+  sample_outputs: "samples/sample_run_outputs.md"

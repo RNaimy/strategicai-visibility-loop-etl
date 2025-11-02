@@ -1,5 +1,3 @@
-
-
 # Data Dictionary — StrategicAI Visibility Loop ETL
 
 This reference explains every column produced in `merged/merged_visibility.csv`. Use it when validating inputs, creating dashboards, and reviewing anomalies.
@@ -131,6 +129,26 @@ This reference explains every column produced in `merged/merged_visibility.csv`.
 - **merged/schema_gaps.csv**  
   Definition: URLs with missing or blank `schema_types`  
   Goal: Fix structured data coverage.
+
+### Additional Anomaly Columns
+- **missed_clicks**  
+  Type: number, rounded to 3 decimals  
+  Calc: `(median(ctr) - ctr) * impressions`, clipped at zero  
+  Usage: Quantifies lost clicks compared to median CTR among top-5-ranked pages.
+
+- **priority_rank**  
+  Type: integer  
+  Calc: Rank of missed_clicks descending, 1 = highest opportunity  
+  Usage: Triage sequence for analyst review.
+
+- **intent_note**  
+  Type: string  
+  Usage: Analyst annotation field for qualitative triage notes (intent, snippet, competitor angle).
+
+### Triage Export
+- **merged/ctr_priority_opportunities.csv**  
+  Definition: Top opportunity pages ranked by missed_clicks, containing only triage columns  
+  Goal: Share concise opportunity list with cross-functional teams without exposing full crawl or analytics data.
 
 ## Notes
 - All demo data is synthetic for NDA compliance and reproducibility.  
