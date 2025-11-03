@@ -35,3 +35,9 @@ site:
   url_normalization:
     force_https: true
     strip_trailing_slash: true
+
+# Input file locations (can be overridden by env vars)
+inputs:
+  screaming_frog: data_demo/screaming_frog_export.csv
+  gsc:            data_demo/gsc_export.csv
+  ga4:            data_demo/ga4_export.csv
