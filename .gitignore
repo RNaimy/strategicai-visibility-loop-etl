@@ -46,12 +46,18 @@ env.bak/
 merged/
 data/*.csv
 samples/*.csv
+!samples/triage_public_lite.csv
 samples/*.md
 public/*.csv
 public/*.md
 etl_output/
+logs/
+logs/etl_autodetect.csv
+logs/runs.csv
 *.xlsx
 *.json
+data/
+analysis/
 
 # Credentials and secrets
 *.env
@@ -80,3 +86,4 @@ coverage.xml
 *.zip
 *.tar
 *.gz
+.publish_checklist.md

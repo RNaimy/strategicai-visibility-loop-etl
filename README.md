@@ -35,16 +35,19 @@ strategicai_visibility_loop_etl/
 ├── merged/                      # Output data after each ETL run
 │   ├── merged_visibility.csv
 │   ├── anomaly_ctr_underperf.csv
+│   ├── anomaly_scored.csv
 │   ├── schema_gaps.csv
-│   └── ctr_priority_opportunities.csv
+│   └── triage_priority.csv
 │
 ├── samples/                     # Triage examples and demo datasets
-│   ├── triage_public_lite.csv   # Lightweight, sanitized CSV safe for sharing
-│   ├── triage_actions_reference.csv  # Minimal example of playbook mappings for demonstration
-│   ├── triage_priority_TOP20.md       # Top 20 triage output for human preview
-│   └── sample_run_outputs.md           # Example console outputs for orientation
+│   ├── triage_public_lite.csv        # Lightweight, sanitized CSV safe for sharing
+│   ├── triage_actions_seed.csv       # Seed checklist of actions/playbooks
+│   ├── triage_priority_TOP20.md      # Top 20 triage output for human preview
+│   ├── triage_priority_TOP20.csv     # Top 20 triage output in CSV
+│   └── triage_priority_pretty.csv    # Pretty-formatted triage preview table
 │
 ├── transforms/                  # Data transformation and reporting modules
+# (Note: public-share CSVs are generated directly by triage_report.py)
 │   ├── triage_report.py         # Generates triage reports, public-share, and reference CSVs
 │   ├── anomaly_scoring.py       # (Optional) Computes CTR/engagement anomalies
 │   ├── entity_enrichment.py     # (Optional) Adds schema/entity intelligence fields
@@ -53,6 +56,14 @@ strategicai_visibility_loop_etl/
 ├── docs/                        # Project documentation
 │   └── data_dictionary.md
 │
+├── scripts/                     # Helper shell scripts for setup and ETL runs
+│   ├── dev_setup.sh             # Developer setup script
+│   └── run_full_etl.sh          # One-click full ETL execution helper
+│
+├── logs/                        # Run and ETL diagnostic logs
+│   ├── etl_autodetect.csv       # Auto-detection log of input and config state
+│   └── runs.csv                 # Logged pipeline run metadata and timestamps
+│
 ├── utils/                       # Placeholder for general helper scripts or utilities
 │
 ├── etl_merge.py                 # Main ETL script
@@ -60,13 +71,17 @@ strategicai_visibility_loop_etl/
 ├── Makefile                     # Setup and automation tasks
 ├── requirements.txt             # Python dependencies
 ├── LICENSE                      # MIT license
+├── SECURITY.md                  # Security policy and disclosure guidelines
+├── requirements-lock.txt         # Frozen dependency versions for reproducibility
 └── README.md                    # Project documentation and guide
 ```
+
+The `transforms/` directory includes the main triage and anomaly modules. Public-share CSVs (like `samples/triage_public_lite.csv`) are now generated automatically by `triage_report.py` — no separate `triage_public_lite.py` file is needed.
 
 **Note:**  
 The `/samples/`, `/transforms/`, and `/utils/` directories are placeholders for future modules and helper utilities, such as enrichment transforms, reusable scripts, or additional demo datasets.
 
-Only the `samples/triage_public_lite.csv` and `samples/triage_actions_reference.csv` files are intended for public sharing or educational use. The other files in the `samples/` directory are for internal use or reference only.
+Only samples/triage_public_lite.csv is intended for public sharing. The other items in samples/ are internal previews or seeds for analyst use.
 
 ---
 
@@ -97,42 +112,141 @@ inputs:
   ga4_csv: "data/ga4_export.csv"
 
 output:
-  merged_csv: "merged/merged_visibility.csv"
   upload_to_sheets: false
 ```
+
+**Note:** Merges are dynamically produced from `data/` inputs and no longer rely on a single `merged_visibility.csv` file.
+
+---
+
+## Developer Setup
+
+To get the development environment ready and run the full ETL pipeline, follow these steps:
+
+- Run the setup script:
+  ```bash
+  scripts/dev_setup.sh
+  ```
+  This script will:
+  - Create a Python virtual environment (`.venv`)
+  - Install all required dependencies from `requirements.txt`
+  - Create necessary folders such as `data/`, `merged/`, and `samples/`
+  - Prepare configuration files if needed
+
+- To run the full ETL pipeline with helper scripts, use:
+  ```bash
+  scripts/run_full_etl.sh
+  ```
+  This script automates the entire ETL process, including merging, transformation, and output generation, to streamline development and testing.
+
+---
+
+## Output Files
+
+| File Name                      | Purpose                                                  |
+|-------------------------------|----------------------------------------------------------|
+| `merged/merged_visibility.csv`       | Canonical merged spine used by all transforms           |
+| `merged/anomaly_ctr_underperf.csv`   | Ranked pages with CTR underperformance anomalies        |
+| `merged/anomaly_scored.csv`          | CTR anomaly rows with standardized z-scores             |
+| `merged/schema_gaps.csv`             | Pages missing schema or undefined `schema_types`        |
+| `merged/triage_priority.csv`         | Primary triage export with playbook, why, effort hint   |
+| `samples/triage_public_lite.csv`     | Lightweight, sanitized CSV safe for public sharing      |
+| `samples/triage_actions_seed.csv`    | Seed checklist of actions/playbooks for analysts        |
+| `samples/triage_priority_TOP20.md`   | Top 20 triage output for human preview                  |
+| `samples/triage_priority_TOP20.csv`  | Top 20 triage output in CSV                             |
+| `samples/triage_priority_pretty.csv` | Pretty-formatted triage preview table                   |
 
 ---
 
 ## Usage
+
+### Required Input Files
+
+To ensure accurate merges, export these reports from your analytics tools and place them in the `data/` folder.
+
+**Google Analytics 4 (GA4)**  
+Export the **Pages and Screens** report with:
+- Page path and screen class (as `url`)
+- Views  
+- Users  
+- Sessions  
+- Engaged sessions  
+- Engagement rate  
+- Average engagement time  
+
+**Google Search Console (GSC)**  
+Export the **Search Results → Pages tab** with columns:
+- Page (as `url`)  
+- Clicks  
+- Impressions  
+- CTR  
+- Position  
+
+**Optional: Screaming Frog SEO Spider**  
+Include crawl-level context (status_code, title, inlinks, schema_types, etc.) if available.
+
+Example structure:
+data/
+- ga4_export.csv
+- gsc_export.csv
+- screaming_frog_export.csv
+
+For full schema and mapping details, see [docs/data_dictionary.md](docs/data_dictionary.md).
 
 Run the ETL merge pipeline:
 ```bash
 make run
 ```
 
-Or manually execute:
-```bash
-python etl_merge.py
-```
-
-The merged dataset will be written to:
-```
-merged/merged_visibility.csv
-```
-
 To run the triage pipeline and generate prioritized insights, use:
 ```bash
 make triage
 ```
-This command generates multiple CSV and Markdown outputs in the `samples/` directory, including `triage_priority_demo.md` and `triage_public_lite.csv` — a sanitized, lightweight CSV designed for public sharing or educational use.
+This command generates multiple CSV and Markdown outputs in the samples/ directory, including triage_priority_TOP20.md, triage_priority_TOP20.csv, triage_priority_pretty.csv, and triage_public_lite.csv — a sanitized CSV designed for public sharing.
+
+**Reference:** For detailed column definitions and schema information, please check `docs/data_dictionary.md`.
 
 ---
 
 ## Example Output Schema
 
-| url | status_code | title | meta_description | click_depth | inlinks | gsc_clicks_90d | gsc_impressions_90d | ga4_sessions_90d |
-|-----|--------------|-------|------------------|--------------|----------|----------------|---------------------|------------------|
-| https://example.com/ | 200 | Home | Example site | 1 | 52 | 240 | 12,500 | 480 |
+| url | status_code | title | meta_description | word_count | click_depth | inlinks | schema_types | clicks | impressions | ctr | position |
+|-----|-------------|-------|------------------|-----------:|------------:|--------:|--------------|-------:|------------:|----:|---------:|
+| https://example.com/blogs/news/example | 200 | Example Title | Example meta description | 950 | 3 | 18 | Article, BreadcrumbList, Organization | 120 | 24,500 | 0.0049 | 11.2 |
+
+---
+
+## Troubleshooting
+
+If you encounter issues running the ETL pipeline or setup scripts, here are some common problems and solutions:
+
+- **Error: `direnv: command not found`**  
+  *Solution:* Install `direnv` on your system and enable it in your shell. For example, on macOS with Homebrew:  
+  ```bash
+  brew install direnv
+  ```
+  Then add `eval "$(direnv hook bash)"` (or your shell) to your shell profile.
+
+- **csvkit not found when using aliases**  
+  *Solution:* Either install csvkit inside the venv or call the tools with absolute paths:  
+  `.venv/bin/pip install csvkit` or use `.venv/bin/csvlook` / `.venv/bin/csvcut`.
+
+- **Virtual environment not activating or missing dependencies**  
+  *Solution:* Ensure you run the setup script `scripts/dev_setup.sh` to create and populate the `.venv` environment. Activate it manually with:  
+  ```bash
+  source .venv/bin/activate
+  ```
+
+- **Missing input files or wrong paths**  
+  *Solution:* Verify your `etl_config.yaml` points to the correct CSV files in the `data/` directory. Make sure files are named correctly and accessible.
+
+- **Permission denied when running scripts**  
+  *Solution:* Make sure the scripts have execution permissions:  
+  ```bash
+  chmod +x scripts/*.sh
+  ```
+
+If problems persist, consult the project documentation or open an issue on the repository.
 
 ---
 
@@ -173,10 +287,13 @@ make run
 This reads demo CSVs in `data/`, merges them, and writes outputs to `merged/`.
 
 ### 2. Files created after each run
-- `merged/merged_visibility.csv` — unified crawl, GSC, and GA4 dataset
+- `merged/merged_visibility.csv` — canonical merged spine
 - `merged/anomaly_ctr_underperf.csv` — ranked CTR underperformance slice
-- `merged/schema_gaps.csv` — pages missing schema or entity definitions
-- `merged/ctr_priority_opportunities.csv` — stakeholder-ready triage list
+- `merged/schema_gaps.csv` — pages with missing or undefined schema_types
+- `merged/triage_priority.csv` — prioritized opportunities with playbook + why + effort
+- `samples/triage_priority_TOP20.md` / `.csv` — quick-share top 20 preview
+- `samples/triage_priority_pretty.csv` — readable triage table for reviews
+- `samples/triage_public_lite.csv` — sanitized CSV suitable for public sharing
 
 ### 3. Recommended setup
 Install csvkit for command-line analysis:
@@ -205,10 +322,10 @@ make columns
 ```
 
 **Shortcut explanations**
-- **triage**: writes `ctr_priority_opportunities.csv` with ranked missed_clicks and empty analyst note fields  
-- **gaps**: lists pages with missing or undefined schema_types  
-- **preview**: prints first 15 merged rows  
-- **columns**: prints numbered header list from merged dataset  
+- **triage**: writes `merged/triage_priority.csv` plus sample previews in `samples/`
+- **gaps**: lists pages with missing or undefined `schema_types`
+- **preview**: prints first 15 rows from `merged/merged_visibility.csv`
+- **columns**: prints numbered header list from the merged dataset
 
 ---
 
@@ -280,3 +397,9 @@ Store this in Notion, Airtable, or Google Sheets. Tool choice matters less than 
 **2024-06-01**  
 - Added public-share CSV pipeline with `triage_public_lite.csv` for safe educational and presentation use.  
 - Improved governance notes and clarified demo data compliance.
+
+---
+
+## Repository Status
+
+This repository is now production-ready for public and educational sharing, with governance and documentation finalized to ensure transparency, compliance, and ease of use.

@@ -12,7 +12,7 @@ The following versions of the StrategicAI Visibility Loop ETL project receive se
 We take security seriously. If you discover a vulnerability or data exposure risk:
 
 1. **Do not open a public GitHub issue.**
-2. Instead, email the maintainer directly at **security@strategicaileader.com** with:
+2. Instead, email the maintainer directly at **support@strategicaileader.com** with:
    - A detailed description of the issue
    - Steps to reproduce
    - Potential impact and suggested mitigations
