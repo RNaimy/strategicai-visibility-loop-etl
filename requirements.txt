@@ -1,0 +1,12 @@
+# StrategicAI Visibility Loop — Public Demo Requirements
+# Minimal dependencies for merging Screaming Frog, GSC, and GA4 CSV exports.
+# Tested with Python 3.13+ on macOS and Linux.
+# For reproducibility: pip freeze > requirements-lock.txt
+
+pandas==2.2.2
+gspread==6.1.2
+google-auth==2.34.0
+pyyaml==6.0.2
+csvkit==1.3.0
+openpyxl==3.1.5
+numpy==2.1.3
