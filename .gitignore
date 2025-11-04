@@ -44,6 +44,7 @@ env.bak/
 
 # Data and output
 merged/
+!merged/merged_visibility.csv
 data/*.csv
 samples/*.csv
 !samples/triage_public_lite.csv

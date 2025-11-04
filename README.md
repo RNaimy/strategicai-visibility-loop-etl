@@ -1,83 +1,80 @@
 MIT © 2025 Richard Naimy • [StrategicAILeader.com](https://www.strategicaileader.com/)
 # StrategicAI Visibility Loop ETL (Public Demo)
 
-Minimal, public ready ETL that merges three exports — Screaming Frog, Google Search Console, and GA4 — into one canonical CSV for analysis or downstream tooling.
+**StrategicAI Visibility Loop ETL** is a lightweight, public-ready tool that merges **Screaming Frog**, **Google Search Console (GSC)**, and **Google Analytics 4 (GA4)** exports into one unified visibility dataset.
 
-This repo ships with synthetic demo data and a one command run that writes:
-- `merged/merged_visibility.csv`
-
-No secrets. No external services. Works offline.
+This project provides a simple end-to-end workflow for consolidating your SEO and analytics data into a single CSV.  
+It includes demo files, configuration templates, and a one-command ETL pipeline.
 
 ---
 
-## Quickstart
+## 🚀 Quickstart
 
 ```bash
-# 1) Clone
+# 1) Clone the repository
 git clone https://github.com/RNaimy/strategicai-visibility-loop-etl.git
 cd strategicai-visibility-loop-etl
 
-# 2) Setup a virtualenv and deps
+# 2) Create virtual environment and install dependencies
 make setup
 
 # 3) Run the demo merge
 make run
 ```
 
-Results will be written to:
+✅ Python 3.9+ recommended.  
+💾 Output is automatically written to:
+
 ```
 merged/merged_visibility.csv
 ```
 
-Open it in Excel, Sheets, or VS Code.
+You can open the resulting CSV in Excel, Google Sheets, or VS Code.
 
 ---
 
-## Inputs
+## 📂 Input Data
 
-Place your CSV exports in `data_demo/` (demo files are already included):
+The tool expects **three standard CSV exports** — one from each platform — placed in the `data_demo/` directory.  
+Pre-populated demo files are included for testing.
 
 ```
 data_demo/
 ├── screaming_frog_export.csv   # url, status_code, title, meta_description, inlinks, word_count
 ├── gsc_export.csv              # url, clicks, impressions, ctr, position
-└── ga4_export.csv              # url, views, users, sessions, engaged_sessions, avg_engagement_time
+└── ga4_export.csv              # url, users, sessions, engaged_sessions, avg_engagement_time
 ```
 
-Tips:
-- Column names are auto mapped. If your headers differ, keep the meaning the same.
-- If your exports contain relative paths like `/blog/roses`, set a base so joins work:
-  ```bash
-  export SITE_BASE="https://www.example-florist.com"
-  ```
-- To drop all query parameters during normalization:
-  ```bash
-  export STRIP_ALL_QUERY_PARAMS=true
-  ```
+⚙️ You can modify file paths in `etl_config.yaml` to point to your own exports.
 
 ---
 
-## Output
+## 📊 Output Overview
 
-`merged/merged_visibility.csv` includes a normalized per URL view with fields like:
+The ETL merges all datasets into a unified CSV with normalized columns per URL.
 
-| url | status_code | title | meta_description | word_count | inlinks | clicks | impressions | ctr | position | views | users | sessions | engaged_sessions | avg_engagement_time |
-|-----|-------------|-------|------------------|-----------:|--------:|------:|-----------:|---:|---------:|-----:|-----:|--------:|-----------------:|--------------------:|
+**Output:** `merged/merged_visibility.csv`
 
-Note: Columns appear if present in your inputs. Missing inputs will yield empty columns.
+Example of merged fields:
+
+| url | status_code | title | meta_description | word_count | inlinks | clicks | impressions | ctr | position | users | sessions | engaged_sessions | avg_engagement_time |
+|-----|-------------|-------|------------------|-----------:|--------:|-------:|------------:|----:|---------:|------:|---------:|-----------------:|--------------------:|
+
+> Missing data from any input will appear blank in the merged output.
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
-Basic configuration is environment first. Common variables:
+Environment-first configuration ensures flexibility for local or team setups.  
+You can define variables inline or in a `.envrc` file.
 
 ```bash
-export SITE_BASE="https://www.example-florist.com"   # optional, for relative paths
-export STRIP_ALL_QUERY_PARAMS=false                   # set true to drop all ?query=params
+export SITE_BASE="https://www.example-florist.com"   # Optional — normalize relative paths
+export STRIP_ALL_QUERY_PARAMS=false                  # Set true to remove ?query=params
 ```
 
-Paths are defined in `etl_config.yaml` and default to the demo files:
+Default paths in `etl_config.yaml`:
 
 ```yaml
 inputs:
@@ -86,47 +83,44 @@ inputs:
   ga4_csv: "data_demo/ga4_export.csv"
 ```
 
+You can override any of these via environment variables.
+
 ---
 
-## Project structure
+## 🧩 Project Structure
 
 ```
 strategicai_visibility_loop_etl/
-├── data_demo/                    # example inputs
-├── merged/                       # outputs (generated)
-├── etl_merge.py                  # main ETL
-├── etl_config.yaml               # paths and options
-├── Makefile                      # setup, run, clean
-├── requirements.txt              # pinned deps for the demo
-├── .gitignore
-├── LICENSE
+├── data_demo/              # Example input data
+├── merged/                 # Generated output (merged_visibility.csv)
+├── etl_merge.py            # Main ETL script
+├── etl_config.yaml         # Path configuration
+├── Makefile                # Setup, run, clean commands
+├── requirements.txt        # Python dependencies
+├── docs/                   # Documentation and Quickstart guides
 └── README.md
 ```
 
-This public demo intentionally omits advanced transforms, reports, and private analysis artifacts. If you want scoring, schema gaps, and triage HTML, use the `strategicai_visibility_loop_etl_advance` repo.
+---
+
+## 🛠️ Troubleshooting
+
+| Issue | Possible Cause | Solution |
+|-------|----------------|-----------|
+| **File not found** | CSV path incorrect | Check file paths in `etl_config.yaml` |
+| **Mismatched URLs** | Relative vs absolute paths | Set `SITE_BASE` and rerun |
+| **Missing columns** | Different header naming | Ensure columns represent same metrics |
 
 ---
 
-## Troubleshooting
+## 🔒 Data Governance
 
-- **File not found**  
-  Ensure your CSVs exist at the paths in `etl_config.yaml`.
-
-- **Weird joins**  
-  Set `SITE_BASE` and re run so relative paths normalize to the same host.
-
-- **Wrong or missing columns**  
-  Keep the semantic meaning even if the header names differ.
+All demo data in this repository is **synthetic** and **safe for public use**.  
+Never commit or share client or proprietary datasets.
 
 ---
 
-## Data governance
+## 📄 License
 
-- All demo data is synthetic. Do not commit client data.
-- The repo contains no secrets and requires none.
-
----
-
-## License
-
-MIT © 2025 Richard Naimy • [StrategicAILeader.com](https://www.strategicaileader.com/)
+MIT © 2025 Richard Naimy  
+[StrategicAILeader.com](https://www.strategicaileader.com/)

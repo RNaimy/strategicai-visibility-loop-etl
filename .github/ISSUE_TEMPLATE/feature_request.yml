@@ -1,0 +1,66 @@
+name: ✨ Feature Request
+description: Suggest a new feature, improvement, or enhancement for the ETL project
+title: "[Feature]: "
+labels: ["enhancement", "discussion"]
+assignees:
+  - RNaimy
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to the StrategicAI Visibility Loop ETL!  
+        Please describe your idea below so we can discuss how to improve the project.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: Provide a brief summary of your proposed feature or improvement.
+      placeholder: "Add a visualization for CTR performance by position"
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Explain why this feature would be useful and what problem it solves.
+      placeholder: "Currently, users can’t easily compare CTR by ranking position. This feature would help prioritize fixes."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature implemented? Be as detailed as possible.
+      placeholder: |
+        - Add new visualization script under /transforms
+        - Use seaborn or matplotlib
+        - Show top 20 URLs by CTR deficit
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Did you consider any alternative approaches?
+      placeholder: "Alternatively, we could export CSVs for external analysis in Google Sheets."
+
+  - type: input
+    id: priority
+    attributes:
+      label: Priority Level
+      description: How urgent or important is this feature?
+      placeholder: "Low / Medium / High"
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmations
+      options:
+        - label: I’ve checked that this feature doesn’t already exist in the latest version
+          required: true
+        - label: I’d be open to helping implement or test this feature

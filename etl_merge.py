@@ -713,6 +713,23 @@ def _agg_ga4(adf: pd.DataFrame) -> pd.DataFrame:
 # Main
 # -------------------------------------------------
 
+# Helper to resolve input paths with ENV/YAML/demo fallback
+def resolve_input_path(env_name: str, cfg: dict, cfg_key: str, default_csv: str) -> str:
+    """
+    Resolve an input file path with precedence:
+      1) ENV variable (e.g., FROG_CSV_PATH / GSC_CSV_PATH / GA4_CSV_PATH)
+      2) etl_config.yaml under inputs[cfg_key] with CSV/XLSX flexibility
+      3) Demo defaults under data_demo/
+    Returns the resolved path (may not exist; caller validates).
+    """
+    env_val = os.getenv(env_name)
+    if isinstance(env_val, str) and env_val.strip():
+        cand = _resolve_any_path(env_val.strip())
+        # If the ENV points to a directory or non-existing file, just return it and let the caller validate
+        return cand
+    # Fallback to config with CSV/XLSX swapping and default
+    return _resolve_input_from_config(cfg, cfg_key, default_csv)
+
 def main():
     cfg = read_config("etl_config.yaml")
     # Normalize any user/env paths up-front
@@ -720,10 +737,10 @@ def main():
     strip_all = str(os.getenv("STRIP_ALL_QUERY_PARAMS", "")).lower().strip() in {"1", "true", "yes"}
     print(f"URL normalize: SITE_BASE='{os.getenv('SITE_BASE','')}', strip_all_query_params={strip_all}")
 
-    # Inputs (accept either CSV or XLSX for all three)
-    frog_csv = _resolve_input_from_config(cfg, "screaming_frog_csv", "data/screaming_frog_export.csv")
-    gsc_csv  = _resolve_input_from_config(cfg, "gsc_csv", "data/gsc_export.csv")
-    ga4_csv  = _resolve_input_from_config(cfg, "ga4_csv", "data/ga4_export.csv")
+    # Prefer ENV, then YAML, then demo defaults under data_demo/
+    frog_csv = resolve_input_path("FROG_CSV_PATH", cfg, "screaming_frog_csv", "data_demo/screaming_frog_export.csv")
+    gsc_csv  = resolve_input_path("GSC_CSV_PATH", cfg, "gsc_csv", "data_demo/gsc_export.csv")
+    ga4_csv  = resolve_input_path("GA4_CSV_PATH", cfg, "ga4_csv", "data_demo/ga4_export.csv")
 
     # Friendly note on what we resolved
     print(f"Resolved inputs → Frog: {frog_csv} | GSC: {gsc_csv} | GA4: {ga4_csv}")

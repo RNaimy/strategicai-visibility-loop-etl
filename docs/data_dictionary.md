@@ -1,6 +1,6 @@
 # Input Data Sources (GA4 & GSC)
 
-This section details the specific reports to download from Google Analytics 4 (GA4) and Google Search Console (GSC) to serve as inputs for the ETL process. It also outlines recommended folder organization and a summary comparison of data sources.
+This section details the specific reports to download from Google Analytics 4 (GA4) and Google Search Console (GSC) to serve as inputs for the ETL merge process, which produces a unified file: `merged/merged_visibility.csv`.
 
 ## 1. Google Analytics 4 (GA4) Input
 
@@ -67,6 +67,9 @@ data/
 | Google Analytics 4 | `url`, `users`, `sessions`, `engaged_sessions`, `engagement_rate`, `avg_engagement_time` | Audience size, engagement quality, and behavior analysis |
 | Google Search Console | `url`, `clicks`, `impressions`, `ctr`, `position` | Search demand, visibility, and ranking insights |
 | Screaming Frog    | `url`, `status_code`, `title`, `meta_description`, `word_count`, `click_depth`, `inlinks`, `schema_types` | Crawl metadata for SEO health and content quality |
+
+**Output:**  
+The ETL produces a single merged dataset — `merged/merged_visibility.csv` — combining analytics, search, and crawl data into one unified visibility view.
 
 ## Column Legend
 
@@ -224,35 +227,6 @@ When crawl data from Screaming Frog is missing or unavailable, the ETL can run i
   Source: Input filenames  
   Usage: Provenance and reproducibility.
 
-## Anomaly Slices (separate CSV outputs)
-- **merged/anomaly_ctr_underperf.csv**  
-  Definition: URLs with `position <= 5` and `ctr < median(ctr)` for the run  
-  Goal: Find pages with strong rank but weak CTR.
-
-- **merged/schema_gaps.csv**  
-  Definition: URLs with missing or blank `schema_types`  
-  Goal: Fix structured data coverage.
-
-### Additional Anomaly Columns
-- **missed_clicks**  
-  Type: number, rounded to 3 decimals  
-  Calc: `(median(ctr) - ctr) * impressions`, clipped at zero  
-  Usage: Quantifies lost clicks compared to median CTR among top-5-ranked pages.
-
-- **priority_rank**  
-  Type: integer  
-  Calc: Rank of missed_clicks descending, 1 = highest opportunity  
-  Usage: Triage sequence for analyst review.
-
-- **intent_note**  
-  Type: string  
-  Usage: Analyst annotation field for qualitative triage notes (intent, snippet, competitor angle).
-
-### Triage Export
-- **merged/ctr_priority_opportunities.csv**  
-  Definition: Top opportunity pages ranked by missed_clicks, containing only triage columns  
-  Goal: Share concise opportunity list with cross-functional teams without exposing full crawl or analytics data.
-
 ## Field Example Values
 
 | Field              | Example Value                          |
@@ -296,4 +270,5 @@ Potential additional fields for future ETL enhancements include:
 
 - All demo data is synthetic for NDA compliance and reproducibility.  
 - Store the Prompt Log in Notion, Airtable, or Google Sheets. Tool choice matters less than consistency.  
-- Future versions may include JSON schema validation for input files (`docs/data_schema.json`) to ensure data consistency and integrity.
+- Future versions may include JSON schema validation for input files (`docs/data_schema.json`) to ensure data consistency and integrity.  
+- In the public release, only the merged visibility dataset is generated. Diagnostic and triage files are available in the advanced version.

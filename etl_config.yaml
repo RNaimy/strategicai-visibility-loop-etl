@@ -1,4 +1,5 @@
 scoring:
+  enable: true
   # Treat expected CTR values below as FRACTIONS (0.015 = 1.5%)
   expected_ctr_units: fraction
   expected_ctr_uplift: 0.00
@@ -26,6 +27,11 @@ scoring:
 thresholds:
   # Small buffer so minor noise doesn’t flag
   ctr_underperf_margin: 0.002
+
+output:
+  # Control optional ETL artifacts (safe defaults for public demo)
+  write_slices: false         # if true, writes ctr_debug.csv, anomaly_ctr_underperf.csv, schema_gaps.csv
+  write_html_reports: false   # if true, writes HTML reports from transforms (requires templates)
 
 # Site-specific normalization (used by ETL when constructing/cleaning URLs)
 site:
